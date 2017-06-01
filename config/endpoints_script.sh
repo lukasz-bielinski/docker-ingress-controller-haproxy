@@ -18,19 +18,19 @@ do
  svc="nginx-1"
  #IPS="192.168.1.12 192.168.33"
 
- cat haproxy.tmpl > test.cfg
- echo -e "\n" >>test.cfg
+ cat /config/haproxy.tmpl > /config/test.cfg
+ echo -e "\n" >>/config/test.cfg
 
  for port in $PORTS; do
-   echo -e  "frontend front_"$svc"_$port\n    bind *:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n" >> test.cfg
-   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance leastconn\n    maxconn 10000  " >> test.cfg
+   echo -e  "frontend front_"$svc"_$port\n    bind *:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n" >> /config/test.cfg
+   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance leastconn\n    maxconn 10000  " >> /config/test.cfg
    for ip in $IPS; do
-     echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> test.cfg
+     echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
    done
-   echo -e " \n" >> test.cfg
+   echo -e " \n" >> /config/test.cfg
  done
 
- cmp --silent test.cfg haproxy.cfg || echo "haproxy config has changed"; cp test.cfg haproxy.cfg; haproxy -f haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
+ cmp --silent /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; cp /config/test.cfg /config/haproxy.cfg; haproxy -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
 
 
  ##reload haproxy
