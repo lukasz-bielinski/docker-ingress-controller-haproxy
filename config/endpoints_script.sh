@@ -20,7 +20,11 @@ do
  #PORTS="81 443"
  svc="nginx-1"
  #IPS="192.168.1.12 192.168.33"
-
+ echo $IPS
+ echo ""
+ echo $PORTS
+ echo ""
+ 
  cat /config/haproxy.tmpl > /config/test.cfg
  echo -e "\n" >>/config/test.cfg
 
