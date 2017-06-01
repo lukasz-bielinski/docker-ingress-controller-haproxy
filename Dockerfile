@@ -10,6 +10,7 @@ RUN   add-apt-repository ppa:vbernat/haproxy-1.7 \
 
 COPY config config
 RUN chmod -R +x config
+RUN touch /var/run/haproxy.pid
 
 
 
