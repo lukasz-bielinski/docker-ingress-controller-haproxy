@@ -1,0 +1,17 @@
+curl 192.168.1.150:8080/api/v1/namespaces/default/endpoints |jq --arg secret nginx-1 '.items[] | select(.subsets.addresses.spec.volumes[]?.secret.secretName == $secret).metadata.name'
+curl 192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |jq '.subsets[].addresses[].ip'
+curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq --arg kind Pod '.subsets[] | select(.addresses[].targetRef.kind == $kind).subsets[].addresses[].ip'
+curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq  --arg kind Pod '.subsets[] | select(.addresses[].targetRef.kind == $kind).addresses[].ip'
+
+ kubectl --namespace=$NS get deployment -o json |  jq --arg secret $secName '.items[] | select(.spec.template.spec.volumes[]?.secret.secretName == $secret).metadata.name'
+
+jq --arg kind Pod '.items[] | select(.subsets[].addresses[].targetRef.kind == $secret).metadata.name'
+
+
+
+draft:
+stats
+
+frontend name-> service name+vip 192.168.1.181-nginx-1
+
+backend servers 10.2.142.231 10.2.142.231
