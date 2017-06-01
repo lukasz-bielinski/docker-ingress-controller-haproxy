@@ -15,4 +15,5 @@ RUN touch /var/run/haproxy.pid
 
 
 
-CMD ["bash", "-c", "/config/endpoints_script.sh"]
+#CMD ["bash", "-c", "/config/endpoints_script.sh"]
+CMD ["bash", "-c", "/config/dummy.sh"]
