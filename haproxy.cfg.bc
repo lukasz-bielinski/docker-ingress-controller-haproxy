@@ -1,0 +1,36 @@
+global
+    log 127.0.0.1:514 local0
+    spread-checks 50
+    maxconn 100000
+
+defaults
+    log global
+    option dontlognull
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+listen stats
+    bind *:1936
+    mode http
+    stats enable
+    stats hide-version
+    stats realm Haproxy\ Statistics
+    stats uri /
+    stats auth myUser:myPassword
+    stats refresh 3s
+
+frontend k8s_api_nodes
+    bind *:3443
+    mode tcp
+    # use haproxy's built in ssl check
+    option ssl-hello-chk
+
+    default_backend k8s_api_nodes
+
+backend k8s_api_nodes
+    mode tcp
+    balance leastconn
+    maxconn 10000
+    server 10-122-16-116 10.122.16.116:443 inter 1s fastinter 1s check
+    server 10-122-16-117 10.122.16.117:443 inter 1s fastinter 1s check

@@ -3,16 +3,20 @@ PORTS="81 443"
 svc="nginx-1"
 IPS="192.168.1.12 192.168.33"
 
+cat haproxy.tmpl > test.cfg
+echo -e "\n" >>test.cfg
 
 for port in $PORTS; do
-    echo -e  "frontend front_"$svc"_$port\n  bind *:$port\n  mode tcp\n  default_backend backend_"$svc"_$port\n" >> test.cfg
-    echo -e  "backend backend_"$svc"_$port\n  mode tcp\n  balance leastconn\n  maxconn 10000  " >> test.cfg
-    for ip in $IPS; do
-    echo -e  "  se2rver $ip \t $ip:$port  inter 1s fastinter 1s check  " >> test.cfg
-    done
-    echo "\n"  >> test.cfg
-    done
+  echo -e  "frontend front_"$svc"_$port\n    bind *:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n" >> test.cfg
+  echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance leastconn\n    maxconn 10000  " >> test.cfg
+  for ip in $IPS; do
+    echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> test.cfg
+  done
+  echo -e " \n" >> test.cfg
+done
 
-# for ip in $IPS; do
-# echo -e  "backend backend_$svc\n  mode tcp\n  balance leastconn\n  maxconn 10000\n  server $ip \n" >> test.cfg
-# done
+cmp --silent test.cfg haproxy.cfg || echo "haproxy config has changed"; cp test.cfg haproxy.cfg; haproxy -f haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
+
+
+##reload haproxy
+#   ./haproxy -f /etc/hapee-1.7/hapee-lb.cfg -p /run/hapee-1.7-lb.pid -x /var/run/hapee-lb.sock
