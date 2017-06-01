@@ -9,8 +9,8 @@ cleanup ()
 }
 trap cleanup SIGINT SIGTERM
 
-
 KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
+haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid
 
 while [ 1 ]
 do
@@ -38,7 +38,7 @@ do
  done
 
 # cmp --silent /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; mv /config/test.cfg /config/haproxy.cfg; haproxy -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
- cmp --silent /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; mv /config/test.cfg /config/haproxy.cfg; haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -x /var/run/haproxy.stat
+ cmp -s /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; mv /config/test.cfg /config/haproxy.cfg; haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -x /var/run/haproxy.stat
 
 
  ##reload haproxy
