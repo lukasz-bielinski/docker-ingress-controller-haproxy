@@ -33,7 +33,7 @@ do
    echo -e " \n" >> /config/test.cfg
  done
 
- cmp --silent /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; cp /config/test.cfg /config/haproxy.cfg; haproxy -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
+ cmp --silent /config/test.cfg /config/haproxy.cfg || echo "haproxy config has changed"; mv /config/test.cfg /config/haproxy.cfg; haproxy -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
 
 
  ##reload haproxy
