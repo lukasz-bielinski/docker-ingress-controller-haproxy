@@ -43,7 +43,7 @@ RUN set -x \
 	&& rm -rf /usr/src/lua \
 	\
 # install HAProxy
-	&& wget -O haproxy.tar.gz "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/haproxy-${HAPROXY_VERSION}.tar.gz" \
+	&& wget -O haproxy.tar.gz "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/devel/haproxy-${HAPROXY_VERSION}.tar.gz" \
 	&& echo "$HAPROXY_MD5 *haproxy.tar.gz" | md5sum -c \
 	&& mkdir -p /usr/src/haproxy \
 	&& tar -xzf haproxy.tar.gz -C /usr/src/haproxy --strip-components=1 \

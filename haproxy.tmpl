@@ -2,6 +2,8 @@ global
     log 127.0.0.1:514 local0
     spread-checks 50
     maxconn 100000
+    pidfile /var/run/haproxy.pid
+    stats socket /var/run/haproxy.stat mode 777
 
 defaults
     log global

@@ -2,13 +2,20 @@ ip_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-
 port_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq '.subsets[].ports[].port' )
 protocol_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq '.subsets[].ports[].protocol' )
 
-counter=0
 
-for i in $ip_List
+
+. /provisioners/functions
+
+func_initialize $PROV_TYPE $DEPLOYMENT_DIR
+
+cleanup ()
+{
+  kill -s SIGTERM $!
+  exit 0
+}
+trap cleanup SIGINT SIGTERM
+
+while [ 1 ]
 do
- counter=$(( counter + 1))
- echo $counter" ip: "$i "port "$port_List " protocol "$protocol_List
-
-  sleep 1
 
 done
