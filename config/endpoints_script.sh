@@ -28,8 +28,8 @@ do
  echo -e "\n" >>/config/test.cfg
 
  for port in $PORTS; do
-   echo -e  "frontend front_"$svc"_$port\n    bind *:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n" >> /config/test.cfg
-   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance leastconn  " >> /config/test.cfg
+   echo -e  "frontend front_"$svc"_$port\n    bind *:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n    stats enable\n    stats realm Haproxy\ Statistics\n    stats uri /stats\n    stats refresh 5s\n" >> /config/test.cfg
+   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
    for ip in $IPS; do
      echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
    done
@@ -43,7 +43,8 @@ then
 else
   echo "haproxy config has changed"
   cp /config/test.cfg /config/haproxy.cfg
-  haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
+  #haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
 fi
 
 
