@@ -43,7 +43,7 @@ then
 else
   echo "haproxy config has changed"
   cp /config/test.cfg /config/haproxy.cfg
-  haproxy -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) &
+  haproxy -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
 fi
 
 
