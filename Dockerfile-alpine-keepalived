@@ -1,9 +1,5 @@
 FROM alpine:3.5
 
-ENV HAPROXY_MAJOR 1.8
-ENV HAPROXY_VERSION 1.8-dev1
-ENV HAPROXY_MD5 a322ac727b5b1ce5eff38364d7057b80
-
 ENV KEEPALIVED_VERSION 1.3.5
 ENV KEEPALIVED_MD5 9964d295ec9d34ed3408b57d28847b68
 
@@ -45,43 +41,16 @@ RUN set -x \
 		INSTALL_LIB='/usr/local/lua-install/lib' \
 	&& rm -rf /usr/src/lua \
 	\
-# install HAProxy
-	&& wget -O haproxy.tar.gz "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/devel/haproxy-${HAPROXY_VERSION}.tar.gz" \
-	&& echo "$HAPROXY_MD5 *haproxy.tar.gz" | md5sum -c \
-	&& mkdir -p /usr/src/haproxy \
-	&& tar -xzf haproxy.tar.gz -C /usr/src/haproxy --strip-components=1 \
-	&& rm haproxy.tar.gz \
-	\
-	&& makeOpts=' \
-		TARGET=linux2628 \
-		USE_LUA=1 LUA_INC=/usr/local/lua-install/inc LUA_LIB=/usr/local/lua-install/lib \
-		USE_OPENSSL=1 \
-		USE_PCRE=1 PCREDIR= \
-		USE_ZLIB=1 \
-	' \
-	&& make -C /usr/src/haproxy -j "$(getconf _NPROCESSORS_ONLN)" all $makeOpts \
-	&& make -C /usr/src/haproxy install-bin $makeOpts \
-	\
-# purge the remnants of our static Lua
-	&& rm -rf /usr/local/lua-install \
-	\
-	&& mkdir -p /usr/local/etc/haproxy \
-	&& cp -R /usr/src/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors \
-	&& rm -rf /usr/src/haproxy \
-	\
-	&& runDeps="$( \
-		scanelf --needed --nobanner --recursive /usr/local \
-			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
-			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
-	)" \
-	&& apk add --virtual .haproxy-rundeps $runDeps \
-	&& apk del .build-deps
+# install KEEPALIVED
+	&& wget -O keepalived.tar.gz "http://www.keepalived.org/software/keepalived-${KEEPALIVED_VERSION}.tar.gz" \
+	&& echo "$KEEPALIVED_MD5 *keepalived.tar.gz" | md5sum -c \
+  && tar xzvf keepalived.tar.gz \
+	&& cd keepalived-${KEEPALIVED_VERSION} \
+	&& ./configure \
+	&& make \
+	&& make install
 
-
-
-RUN apk add --update curl jq	bash vim keepalived
+RUN apk add --update curl jq	bash vim
 
 COPY config config
 RUN chmod -R +x config
@@ -90,5 +59,5 @@ RUN touch /var/run/haproxy.pid
 
 
 
-CMD ["bash", "-c", "/config/endpoints_script.sh"]
-#CMD ["bash", "-c", "/config/dummy.sh"]
+#CMD ["bash", "-c", "/config/endpoints_script.sh"]
+CMD ["bash", "-c", "/config/dummy.sh"]
