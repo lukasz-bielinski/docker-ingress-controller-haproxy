@@ -9,9 +9,10 @@ cleanup ()
 }
 trap cleanup SIGINT SIGTERM
 
-set -e
 INTERVAL_VRRP_SCRIPT_CHECK="${INTERVAL_VRRP_SCRIPT_CHECK:-1}"
 ADVERT="${ADVERT:-1}"
+PRIORITY="${PRIORITY:-100}"
+STATE="${STATE:-BACKUP}"
 HAPROXY_CHECK_TIMEOUT="${HAPROXY_CHECK_TIMEOUT:-1}"
 
 
@@ -33,7 +34,10 @@ sed -i -e "s/<--NOTIFIEMAILFROM-->/${NOTIFIEMAILFROM}/g" /config/keepalived.conf
 sed -i -e "s/<--SMTPSERV-->/${SMTPSERV}/g" /config/keepalived.conf
 
 sed -i -e "s/<--VIP-->/${VIP}/g" /config/haproxy.tmpl
+sed -i -e "s/<--VIP-->/${VIP}/g" /config/endpoints_script.sh
 
+echo "starting keepalived"
+keepalived  --log-console -f /config/keepalived.conf
 
 KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
 
