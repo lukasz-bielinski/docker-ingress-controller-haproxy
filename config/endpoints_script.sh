@@ -1,6 +1,4 @@
-#ip_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
-#port_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq '.subsets[].ports[].port' )
-#protocol_List=$(curl -s  192.168.1.150:8080/api/v1/namespaces/default/endpoints/nginx-1 |  jq '.subsets[].ports[].protocol' )
+
 
 cleanup ()
 {
@@ -44,15 +42,7 @@ KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
 while [ 1 ]
 do
  sleep 3
- IPS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/default/endpoints/nginx-1 |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
- PORTS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/default/endpoints/nginx-1 |  jq '.subsets[].ports[].port' )
- #PORTS="81 443"
- svc="nginx-1"
- #IPS="192.168.1.12 192.168.33"
- echo $IPS
- echo ""
- echo $PORTS
- echo ""
+
 
  cat /config/haproxy.tmpl > /config/test.cfg
  echo -e "\n" >>/config/test.cfg
