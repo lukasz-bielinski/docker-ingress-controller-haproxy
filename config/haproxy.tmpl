@@ -13,11 +13,11 @@ defaults
     timeout server 50000ms
 
 listen stats
-    bind <--VIP-->:<--STATS-PORT-->
+    bind <--VIP-->:<--STATS_PORT-->
     mode http
     stats enable
     stats hide-version
     stats realm Haproxy\ Statistics
     stats uri /
-    stats auth myUser:myPassword
+    stats auth <--STATS_USER-->:<--STATS_PASSWORD-->
     stats refresh 5s
