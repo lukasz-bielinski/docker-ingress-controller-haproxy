@@ -4,6 +4,7 @@ global
     maxconn 100000
     pidfile /var/run/haproxy.pid
     stats socket /var/run/haproxy.sock expose-fd listeners mode 777
+    tune.ssl.default-dh-param 2048
 
 defaults
     log global
@@ -13,7 +14,7 @@ defaults
     timeout server 50000ms
 
 listen stats
-    bind <--VIP-->:<--STATS_PORT-->
+    bind <--VIP-->:<--STATS_PORT--> ssl crt /config/stats.crt
     mode http
     stats enable
     stats hide-version

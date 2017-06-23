@@ -78,7 +78,7 @@ RUN set -x \
 
 
 
-RUN apk add --update curl jq	bash vim keepalived
+RUN apk add --update curl jq	bash vim keepalived openssl
 
 COPY config config
 RUN chmod -R +x config

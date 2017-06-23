@@ -1,3 +1,8 @@
+source /config/functions
+
+gen_cert ${VIP}
+
+
 cleanup ()
 {
   kill -s SIGTERM $!
