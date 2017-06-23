@@ -22,7 +22,7 @@ spec:
 
       containers:
         - name: vip-ing
-          image: docker-release.otlabs.fr/docker-ingress-controller:0.2
+          image: docker-release.otlabs.fr/docker-ingress-controller:0.3
           #image: lukaszbielinski/ing:02
           imagePullPolicy: Always
           securityContext:
