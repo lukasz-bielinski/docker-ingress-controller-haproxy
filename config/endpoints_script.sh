@@ -37,7 +37,6 @@ sed -i -e "s/<--VIP-->/${VIP}/g" /config/endpoints_script.sh
 echo "starting keepalived"
 keepalived  --log-console -f /config/keepalived.conf
 
-KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
 
 while [ 1 ]
 do
@@ -47,8 +46,8 @@ do
  cat /config/haproxy.tmpl > /config/test.cfg
  echo -e "\n" >>/config/test.cfg
 
- for port in $PORTS; do
-   echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
+ for port in $DB_PORTS; do
+   echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$haproxy_port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
    echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
    for ip in $IPS; do
      echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
@@ -64,7 +63,7 @@ else
   echo "haproxy config has changed"
   cp /config/test.cfg /config/haproxy.cfg
   #  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid  -x /var/run/haproxy.sock
-  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+  haproxy   -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)
 fi
 
 
