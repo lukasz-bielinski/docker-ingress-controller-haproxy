@@ -11,7 +11,7 @@ defaults
     timeout server 50000ms
 
 listen stats
-    bind *:1936
+    bind *:1937
     mode http
     stats enable
     stats hide-version

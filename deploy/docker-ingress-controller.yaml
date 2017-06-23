@@ -1,0 +1,70 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+#  namespace: infra
+  name: vip-ing
+  labels:
+    app-name: vip-ing
+
+spec:
+  template:
+    metadata:
+      labels:
+        name: vip-ing
+
+    spec:
+      # nodeSelector:
+      #   zone: frontend
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: vip-ing
+          image: docker-release.otlabs.fr/docker-ingress-controller:0.2
+          #image: lukaszbielinski/ing:02
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          # resources:
+          #   requests:
+          #     cpu: 30m
+          #     memory: 32Mi
+          #   limits:
+          #     cpu: 1
+          #     memory: 48Mi
+          env:
+            - name: VIP
+              value: "10.122.16.182"
+            - name: MASK
+              value: "32"
+            - name: VROUTERID
+              value: "180"
+            - name: INTERFACE
+              value: "eth1"
+            - name: AUTHPASS
+              value: sdovn12434s2wnwd
+            - name: SERVICE
+              value: kubernetes-dashboard
+            - name: NAMESPACE
+              value: kube-system
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
+          - mountPath: /usr/sbin/modprobe
+            name: modprobe
+          - mountPath: /lib/modules
+            name: modules
+
+      volumes:
+      - name: sys
+        hostPath:
+            path: /sys
+      - name: modprobe
+        hostPath:
+            path: /sbin/modprobe
+      - name: modules
+        hostPath:
+            path: /lib/modules
+#
