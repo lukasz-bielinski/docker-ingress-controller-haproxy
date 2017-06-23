@@ -13,7 +13,7 @@ defaults
     timeout server 50000ms
 
 listen stats
-    bind <--VIP-->:1937
+    bind <--VIP-->:<--STATS-PORT-->
     mode http
     stats enable
     stats hide-version

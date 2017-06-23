@@ -14,7 +14,7 @@ ADVERT="${ADVERT:-1}"
 PRIORITY="${PRIORITY:-100}"
 STATE="${STATE:-BACKUP}"
 HAPROXY_CHECK_TIMEOUT="${HAPROXY_CHECK_TIMEOUT:-1}"
-
+STATS-PORT="${STATS-PORT:-1937}"
 
 echo "=> Configuring Keepalived"
 sed -i -e "s/<--INTERVAL-->/${INTERVAL_VRRP_SCRIPT_CHECK}/g" /config/keepalived.conf
@@ -35,6 +35,7 @@ sed -i -e "s/<--SMTPSERV-->/${SMTPSERV}/g" /config/keepalived.conf
 
 sed -i -e "s/<--VIP-->/${VIP}/g" /config/haproxy.tmpl
 sed -i -e "s/<--VIP-->/${VIP}/g" /config/endpoints_script.sh
+sed -i -e "s/<--STATS-PORT-->/${STATS-PORT}/g" /config/haproxy.tmpl
 
 echo "starting keepalived"
 keepalived  --log-console -f /config/keepalived.conf
