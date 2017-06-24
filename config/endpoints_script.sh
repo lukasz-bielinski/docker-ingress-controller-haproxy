@@ -48,6 +48,8 @@ echo "starting keepalived"
 keepalived  --log-console -f /config/keepalived.conf
 
 KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
+haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+
 
 while [ 1 ]
 do

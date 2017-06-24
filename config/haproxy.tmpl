@@ -3,7 +3,7 @@ global
     spread-checks 50
     maxconn 100000
     pidfile /var/run/haproxy.pid
-    stats socket /var/run/haproxy.sock expose-fd listeners mode 777
+    stats socket /var/run/haproxy.sock mode 777 expose-fd listeners
     tune.ssl.default-dh-param 2048
 
 defaults
