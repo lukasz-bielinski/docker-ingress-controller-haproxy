@@ -53,7 +53,7 @@ haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run
 
 while [ 1 ]
 do
- sleep 3
+ sleep 5
  IPS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
  PORTS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq '.subsets[].ports[].port' )
  svc="$SERVICE"
@@ -67,7 +67,7 @@ do
 
  for port in $PORTS; do
    echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
-   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin\n  " >> /config/test.cfg   
+   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin\n  " >> /config/test.cfg
    for ip in $IPS; do
      echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
    done

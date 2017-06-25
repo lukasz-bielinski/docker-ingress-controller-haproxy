@@ -82,8 +82,9 @@ RUN apk add --update curl jq	bash vim keepalived openssl
 
 COPY config config
 RUN chmod -R +x config
-RUN touch /var/run/haproxy.pid
 
+RUN touch /var/run/haproxy.pid
+RUN ln -sf /proc/1/fd/1 /keepalived.log
 
 
 
