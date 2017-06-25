@@ -22,7 +22,7 @@ spec:
 
       containers:
         - name: vip-ing
-          image: lukaszbielinski/ing:3.26
+          image: lukaszbielinski/ing:3.33
           #image: lukaszbielinski/ing:02
           imagePullPolicy: Always
           securityContext:
