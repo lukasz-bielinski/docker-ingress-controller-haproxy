@@ -57,9 +57,17 @@ do
  IPS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
  PORTS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq '.subsets[].ports[].port' )
  svc="$SERVICE"
- echo $IPS
  echo ""
- echo $PORTS
+ echo -e "Namespace: $NAMESPACE \n"
+ echo -e "Service: $SERVICE \n"
+ echo "Ports: "
+ for i in $PORTS; do
+   echo -e  "$i \n"
+ done
+ echo "Backend ips: "
+ for i in $IPS; do
+   echo -e  "$i \n"
+ done
  echo ""
 
  cat /config/haproxy.tmpl > /config/test.cfg
