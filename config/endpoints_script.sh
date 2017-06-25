@@ -67,7 +67,7 @@ do
 
  for port in $PORTS; do
    echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
-   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
+   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin\n  " >> /config/test.cfg   
    for ip in $IPS; do
      echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
    done
