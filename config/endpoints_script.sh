@@ -62,11 +62,12 @@ do
  echo -e "Service: $SERVICE \n"
  echo "Ports: "
  for i in $PORTS; do
-   echo -e  "$i \n"
+   echo -e  "$i"
  done
+ echo ""
  echo "Backend ips: "
  for i in $IPS; do
-   echo -e  "$i \n"
+   echo -e  "$i"
  done
  echo ""
 
