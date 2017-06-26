@@ -1,3 +1,4 @@
+echo "https://github.com/lukasz-bielinski/docker-ingress-controller-haproxy"
 source /config/functions
 
 gen_cert ${VIP}
