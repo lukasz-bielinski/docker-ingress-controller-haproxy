@@ -1,59 +1,144 @@
 function gen_cert {
-#!/bin/bash
+  #!/bin/bash
 
-# Bash shell script for generating self-signed certs. Run this in a folder, as it
-# generates a few files. Large portions of this script were taken from the
-# following artcile:
-#
-# http://usrportage.de/archives/919-Batch-generating-SSL-certificates.html
-#
-# Additional alterations by: Brad Landers
-# Date: 2012-01-27
+  # Bash shell script for generating self-signed certs. Run this in a folder, as it
+  # generates a few files. Large portions of this script were taken from the
+  # following artcile:
+  #
+  # http://usrportage.de/archives/919-Batch-generating-SSL-certificates.html
+  #
+  # Additional alterations by: Brad Landers
+  # Date: 2012-01-27
 
-# Script accepts a single argument, the fqdn for the cert
-DOMAIN="$1"
-if [ -z "$DOMAIN" ]; then
-  echo "Usage: $(basename $0) <domain>"
-  exit 11
-fi
+  # Script accepts a single argument, the fqdn for the cert
+  DOMAIN="$1"
+  if [ -z "$DOMAIN" ]; then
+    echo "Usage: $(basename $0) <domain>"
+    exit 11
+  fi
 
-fail_if_error() {
-  [ $1 != 0 ] && {
-    unset PASSPHRASE
-    exit 10
+  fail_if_error() {
+    [ $1 != 0 ] && {
+      unset PASSPHRASE
+      exit 10
+    }
   }
+
+  # Generate a passphrase
+  export PASSPHRASE=$(head -c 500 /dev/urandom | tr -dc a-z0-9A-Z | head -c 128; echo)
+
+  # Certificate details; replace items in angle brackets with your own info
+  subj="/CN=$DOMAIN"
+
+  # Generate the server private key
+  openssl genrsa -des3 -out /config/$DOMAIN.key -passout env:PASSPHRASE 2048
+  fail_if_error $?
+
+  # Generate the CSR
+  openssl req \
+  -new \
+  -batch \
+  -subj "$(echo -n "$subj" | tr "\n" "/")" \
+  -key /config/$DOMAIN.key \
+  -out /config/$DOMAIN.csr \
+  -passin env:PASSPHRASE
+  fail_if_error $?
+  cp /config/$DOMAIN.key /config/$DOMAIN.key.org
+  fail_if_error $?
+
+  # Strip the password so we don't have to type it every time we restart Apache
+  openssl rsa -in /config/$DOMAIN.key.org -out /config/$DOMAIN.key -passin env:PASSPHRASE
+  fail_if_error $?
+
+  # Generate the cert (good for 10 years)
+  openssl x509 -req -days 3650 -in /config/$DOMAIN.csr -signkey /config/$DOMAIN.key -out /config/stats.pem
+  fail_if_error $?
+
+  cat /config/stats.pem /config/$DOMAIN.key > /config/stats.crt
+
 }
 
-# Generate a passphrase
-export PASSPHRASE=$(head -c 500 /dev/urandom | tr -dc a-z0-9A-Z | head -c 128; echo)
+function static_endpoints {
 
-# Certificate details; replace items in angle brackets with your own info
-subj="/CN=$DOMAIN"
+  cat /config/haproxy.tmpl > /config/test.cfg
+  echo -e "\n" >>/config/test.cfg
+  echo -e  "frontend front_$FRONTEND_PORT\n    bind ${VIP}:$FRONTEND_PORT\n    mode tcp\n    default_backend backend_$BACKEND_PORT\n " >> /config/test.cfg
+  echo -e  "backend backend_$BACKEND_PORT\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
+  for ip in $BACKEND_IPS; do
+    echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check " >> /config/test.cfg
+  done
+  echo -e " \n" >> /config/test.cfg
+  cp /config/test.cfg /config/haproxy.cfg
+  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
 
-# Generate the server private key
-openssl genrsa -des3 -out /config/$DOMAIN.key -passout env:PASSPHRASE 2048
-fail_if_error $?
+  while [ 1 ]
+  do
+    sleep 5
+    cat /config/haproxy.tmpl > /config/test.cfg
+    echo -e "\n" >>/config/test.cfg
+    echo -e  "frontend front_$FRONTEND_PORT\n    bind ${VIP}:$FRONTEND_PORT\n    mode tcp\n    default_backend backend_$BACKEND_PORT\n " >> /config/test.cfg
+    echo -e  "backend backend_$BACKEND_PORT\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
+    for ip in $BACKEND_IPS; do
+      echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check " >> /config/test.cfg
+    done
+    echo -e " \n" >> /config/test.cfg
+    cp /config/test.cfg /config/haproxy.cfg
 
-# Generate the CSR
-openssl req \
-    -new \
-    -batch \
-    -subj "$(echo -n "$subj" | tr "\n" "/")" \
-    -key /config/$DOMAIN.key \
-    -out /config/$DOMAIN.csr \
-    -passin env:PASSPHRASE
-fail_if_error $?
-cp /config/$DOMAIN.key /config/$DOMAIN.key.org
-fail_if_error $?
+    diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
+    if [[ $? == "0" ]]
+    then
+      echo "haproxy config has NOT changed"
+    else
+      echo "haproxy config has changed"
+      cp /config/test.cfg /config/haproxy.cfg
+      haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+    fi
+  done
+}
 
-# Strip the password so we don't have to type it every time we restart Apache
-openssl rsa -in /config/$DOMAIN.key.org -out /config/$DOMAIN.key -passin env:PASSPHRASE
-fail_if_error $?
+function dynamic_endpoints {
+  while [ 1 ]
+  do
+    sleep 5
+    IPS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
+    PORTS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq '.subsets[].ports[].port' )
+    svc="$SERVICE"
+    echo ""
+    echo -e "Namespace: $NAMESPACE \n"
+    echo -e "Service: $SERVICE \n"
+    echo "Ports: "
+    for i in $PORTS; do
+      echo -e  "$i"
+    done
+    echo ""
+    echo "Backend ips: "
+    for i in $IPS; do
+      echo -e  "$i"
+    done
+    echo ""
 
-# Generate the cert (good for 10 years)
-openssl x509 -req -days 3650 -in /config/$DOMAIN.csr -signkey /config/$DOMAIN.key -out /config/stats.pem
-fail_if_error $?
+    cat /config/haproxy.tmpl > /config/test.cfg
+    echo -e "\n" >>/config/test.cfg
 
-cat /config/stats.pem /config/$DOMAIN.key > /config/stats.crt
+    for port in $PORTS; do
+      echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
+      echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin\n  " >> /config/test.cfg
+      for ip in $IPS; do
+        echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
+      done
+      echo -e " \n" >> /config/test.cfg
+    done
+
+    diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
+    if [[ $? == "0" ]]
+    then
+      echo "haproxy config has NOT changed"
+    else
+      echo "haproxy config has changed"
+      cp /config/test.cfg /config/haproxy.cfg
+      haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+    fi
+
+  done
 
 }

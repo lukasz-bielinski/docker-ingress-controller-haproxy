@@ -45,10 +45,14 @@ spec:
               value: "eth1"
             - name: AUTHPASS
               value: sdovn12434s2wnwd
-            - name: SERVICE
-              value: kubernetes-dashboard
-            - name: NAMESPACE
-              value: kube-system
+            - name: CONFIGURATION_TYPE
+              value: static
+            - name: FRONTEND_PORT
+              value: 3306
+            - name: BACKEND_PORT
+              value: 3307
+            - name: BACKEND_IPS
+              value: 10.122.16.10 10.122.16.11 10.122.16.112
           volumeMounts:
           - mountPath: /sys
             name: sys

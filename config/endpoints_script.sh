@@ -19,6 +19,8 @@ HAPROXY_CHECK_TIMEOUT="${HAPROXY_CHECK_TIMEOUT:-1}"
 STATS_PORT="${STATS_PORT:-1937}"
 STATS_USER="${STATS_USER:-myUser}"
 STATS_PASSWORD="${STATS_PASSWORD:-myPassword}"
+CONFIGURATION_TYPE="${CONFIGURATION_TYPE:-dynamic}"
+
 
 echo "=> Configuring Keepalived"
 sed -i -e "s/<--INTERVAL-->/${INTERVAL_VRRP_SCRIPT_CHECK}/g" /config/keepalived.conf
@@ -48,56 +50,14 @@ sed -i -e "s/<--VIP-->/${VIP}/g" /config/endpoints_script.sh
 echo "starting keepalived"
 keepalived  --log-console -f /config/keepalived.conf
 
-KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
 haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
 
 
-while [ 1 ]
-do
- sleep 5
- IPS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq  --arg kind Pod '.subsets[] |select(.addresses[].targetRef.kind == $kind).addresses[].ip ' |sort |uniq )
- PORTS=$(curl -sSk -H "Authorization: Bearer $KUBE_TOKEN"  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$NAMESPACE/endpoints/$SERVICE |  jq '.subsets[].ports[].port' )
- svc="$SERVICE"
- echo ""
- echo -e "Namespace: $NAMESPACE \n"
- echo -e "Service: $SERVICE \n"
- echo "Ports: "
- for i in $PORTS; do
-   echo -e  "$i"
- done
- echo ""
- echo "Backend ips: "
- for i in $IPS; do
-   echo -e  "$i"
- done
- echo ""
-
- cat /config/haproxy.tmpl > /config/test.cfg
- echo -e "\n" >>/config/test.cfg
-
- for port in $PORTS; do
-   echo -e  "frontend front_"$svc"_$port\n    bind ${VIP}:$port\n    mode tcp\n    default_backend backend_"$svc"_$port\n " >> /config/test.cfg
-   echo -e  "backend backend_"$svc"_$port\n    mode tcp\n    balance roundrobin\n  " >> /config/test.cfg
-   for ip in $IPS; do
-     echo -e  "    server $ip \t $ip:$port \t inter 1s fastinter 1s check " >> /config/test.cfg
-   done
-   echo -e " \n" >> /config/test.cfg
- done
-
-diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
-if [[ $? == "0" ]]
-then
-  echo "haproxy config has NOT changed"
+if [ $CONFIGURATION_TYPE == static ]; then
+  echo "execucitng haproxy with static_endpoints"
+  static_endpoints
 else
-  echo "haproxy config has changed"
-  cp /config/test.cfg /config/haproxy.cfg
-  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
-  #haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf  -x /var/run/haproxy.sock
+  echo "execucitng haproxy with dynamic_endpoints"
+  KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
+  dynamic_endpoints
 fi
-
-
-
- ##reload haproxy
- #   ./haproxy -f /etc/hapee-1.7/hapee-lb.cfg -p /run/hapee-1.7-lb.pid -x /var/run/hapee-lb.sock
-
-done

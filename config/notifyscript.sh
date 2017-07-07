@@ -7,6 +7,7 @@ LOGPATH="/"
 case $STATE in
         "MASTER") touch $LOGPATH/keepalive.logs
                   echo "$NOW Becoming MASTER" >> $LOGPATH/keepalived.log
+                  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
                   exit 0
                   ;;
         "BACKUP") rm $KEEPALIVED/MASTER
@@ -16,12 +17,10 @@ case $STATE in
         "FAULT")  rm $KEEPALIVED/MASTER
                   echo "$NOW Becoming FAULT" >> $LOGPATH/keepalived.log
                   echo ""
-                  pkill -9 haproxy >> $LOGPATH/keepalived.log
                   exit 0
                   ;;
         *)        echo "unknown state"
                   echo "$NOW Becoming UNKOWN" >> $LOGPATH/keepalived.log
-                  pkill -9 haproxy >> $LOGPATH/keepalived.log
                   exit 1
                   ;;
 esac

@@ -1,0 +1,20 @@
+keepalived-haproxy_local:
+  privileged: true
+  container_name: keepalived_haproxy
+  image: lukaszbielinski/docker-ingress-controller-haproxy
+  restart: always
+  net: host
+  volumes:
+    - /sys:/sys/:rw
+    - /sbin/modprobe/:/usr/sbin/modprobe/:rw
+    - /lib/modules/:/lib/modules/:rw
+  environment:
+    - VIP=10.228.129.89
+    - MASK=27
+    - VROUTERID=89
+    - INTERFACE=ens3
+    - AUTHPASS=sdovn12434s2wnwd
+    - CONFIGURATION_TYPE=static
+    - FRONTEND_PORT=3306
+    - BACKEND_PORT=3307
+    - BACKEND_IPS=10.123.34.164 10.123.34.165 10.123.34.166
