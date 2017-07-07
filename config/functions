@@ -83,7 +83,7 @@ function static_endpoints {
     done
     echo -e " \n" >> /config/test.cfg
     cp /config/test.cfg /config/haproxy.cfg
-
+    
     diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
     if [[ $? == "0" ]]
     then
