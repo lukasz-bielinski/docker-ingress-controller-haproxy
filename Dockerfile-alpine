@@ -78,7 +78,7 @@ RUN set -x \
 
 
 
-RUN apk add --update curl jq	bash vim keepalived openssl
+RUN apk add --update --no-cache diffutils bash gawk sed grep bc coreutils curl jq	vim keepalived openssl
 
 COPY config config
 RUN chmod -R +x config
@@ -86,7 +86,11 @@ RUN chmod -R +x config
 RUN touch /var/run/haproxy.pid
 RUN ln -sf /proc/1/fd/1 /keepalived.log
 
-
+#RUN set -x ; \
+#    addgroup -g 499 -S app ; \
+#    adduser -u 499  -D -S -G app app && exit 0 ; exit 1
+#RUN chown -R app:app /config
+#USER app
 
 CMD ["bash", "-c", "/config/endpoints_script.sh"]
 #CMD ["bash", "-c", "/config/dummy.sh"]
