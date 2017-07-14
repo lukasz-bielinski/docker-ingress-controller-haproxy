@@ -76,15 +76,14 @@ RUN set -x \
 	&& apk add --virtual .haproxy-rundeps $runDeps \
 	&& apk del .build-deps
 
-
-
-RUN apk add --update --no-cache diffutils bash gawk sed grep bc coreutils curl jq	vim keepalived openssl
+RUN apk add --update --no-cache diffutils bash gawk sed grep bc coreutils curl jq	vim keepalived openssl \
+    && rm -rf /var/cache/apk/*
 
 COPY config config
-RUN chmod -R +x config
 
-RUN touch /var/run/haproxy.pid
-RUN ln -sf /proc/1/fd/1 /keepalived.log
+RUN chmod -R +x config \
+    && touch /var/run/haproxy.pid \
+    && ln -sf /proc/1/fd/1 /keepalived.log
 
 #RUN set -x ; \
 #    addgroup -g 499 -S app ; \
