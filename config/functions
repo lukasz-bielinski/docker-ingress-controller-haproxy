@@ -83,7 +83,52 @@ function static_endpoints {
     done
     echo -e " \n" >> /config/test.cfg
     cp /config/test.cfg /config/haproxy.cfg
-    
+
+    diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
+    if [[ $? == "0" ]]
+    then
+      echo "haproxy config has NOT changed"
+    else
+      echo "haproxy config has changed"
+      cp /config/test.cfg /config/haproxy.cfg
+      haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+    fi
+  done
+}
+
+function static_endpoints_galera {
+
+  cat /config/haproxy.tmpl > /config/test.cfg
+  echo -e "\n" >>/config/test.cfg
+  echo -e  "frontend front_$FRONTEND_PORT\n    bind ${VIP}:$FRONTEND_PORT\n    mode tcp\n    default_backend backend_$BACKEND_PORT\n " >> /config/test.cfg
+  echo -e  "backend backend_$BACKEND_PORT\n    mode tcp\n    balance roundrobin  " >> /config/test.cfg
+  for ip in $BACKEND_IPS; do
+    echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check " >> /config/test.cfg
+  done
+  echo -e " \n" >> /config/test.cfg
+  cp /config/test.cfg /config/haproxy.cfg
+  haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid) -x /var/run/haproxy.sock
+
+  while [ 1 ]
+  do
+    sleep 5
+    cat /config/haproxy.tmpl > /config/test.cfg
+    echo -e "\n" >>/config/test.cfg
+    echo -e  "frontend front_$FRONTEND_PORT\n    bind ${VIP}:$FRONTEND_PORT\n    mode tcp\n    default_backend backend_$BACKEND_PORT\n " >> /config/test.cfg
+    echo -e  "backend backend_$BACKEND_PORT\n    mode tcp\n    balance source\n    option tcpka\n    option mysql-check user haproxy " >> /config/test.cfg
+    counter=0
+    for ip in $BACKEND_IPS; do
+      echo $counter
+      if [ $counter == 0 ]; then
+        echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check " >> /config/test.cfg
+      else
+        echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check backup " >> /config/test.cfg
+      fi
+      counter=$((counter + 1))
+    done
+    echo -e " \n" >> /config/test.cfg
+    cp /config/test.cfg /config/haproxy.cfg
+
     diff -q /config/test.cfg /config/haproxy.cfg 1>/dev/null
     if [[ $? == "0" ]]
     then

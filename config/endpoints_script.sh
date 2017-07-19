@@ -54,10 +54,17 @@ haproxy  -W -D -f /config/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run
 
 
 if [ $CONFIGURATION_TYPE == static ]; then
-  echo "execucitng haproxy with static_endpoints"
+  echo "executing haproxy with static_endpoints"
   static_endpoints
-else
-  echo "execucitng haproxy with dynamic_endpoints"
+fi
+
+if [ $CONFIGURATION_TYPE == dynamic ]; then
+  echo "executing haproxy with dynamic_endpoints"
   KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
   dynamic_endpoints
+fi
+
+if [ $CONFIGURATION_TYPE == static_galera ]; then
+  echo "executing haproxy with static_galera"
+  static_endpoints_galera
 fi
