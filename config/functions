@@ -118,7 +118,6 @@ function static_endpoints_galera {
     echo -e  "backend backend_$BACKEND_PORT\n    mode tcp\n    balance source\n    option tcpka\n    option mysql-check user haproxy " >> /config/test.cfg
     counter=0
     for ip in $BACKEND_IPS; do
-      echo $counter
       if [ $counter == 0 ]; then
         echo -e  "    server $ip \t $ip:$BACKEND_PORT \t inter 1s fastinter 1s check " >> /config/test.cfg
       else
