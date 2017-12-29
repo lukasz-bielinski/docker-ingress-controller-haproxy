@@ -36,12 +36,12 @@ function gen_cert {
 
   # Generate the CSR
   openssl req \
-  -new \
-  -batch \
-  -subj "$(echo -n "$subj" | tr "\n" "/")" \
-  -key /config/$DOMAIN.key \
-  -out /config/$DOMAIN.csr \
-  -passin env:PASSPHRASE
+    -new \
+    -batch \
+    -subj "$(echo -n "$subj" | tr "\n" "/")" \
+    -key /config/$DOMAIN.key \
+    -out /config/$DOMAIN.csr \
+    -passin env:PASSPHRASE
   fail_if_error $?
   cp /config/$DOMAIN.key /config/$DOMAIN.key.org
   fail_if_error $?
