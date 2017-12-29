@@ -1,12 +1,12 @@
-FROM alpine:3.6
+FROM alpine:3.7
 
 ENV HAPROXY_MAJOR 1.8
-ENV HAPROXY_VERSION 1.8-dev2
-ENV HAPROXY_MD5 ac838b03b9d6ed40b19d7b0db3472022
+ENV HAPROXY_VERSION 1.8.2
+ENV HAPROXY_MD5 5e72829793e163bea93da1df6b4aaa1e
 
 # https://www.lua.org/ftp/#source
-ENV LUA_VERSION=5.3.3 \
-	LUA_SHA1=a0341bc3d1415b814cc738b2ec01ae56045d64ef
+ENV LUA_VERSION=5.3.4 \
+	LUA_SHA1=79790cfd40e09ba796b01a571d4d63b52b1cd950
 
 # see http://sources.debian.net/src/haproxy/jessie/debian/rules/ for some helpful navigation of the possible "make" arguments
 RUN set -x \
@@ -43,7 +43,7 @@ RUN set -x \
 	&& rm -rf /usr/src/lua \
 	\
 # install HAProxy
-	&& wget -O haproxy.tar.gz "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/devel/haproxy-${HAPROXY_VERSION}.tar.gz" \
+	&& wget -O haproxy.tar.gz "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/haproxy-${HAPROXY_VERSION}.tar.gz" \
 	&& echo "$HAPROXY_MD5 *haproxy.tar.gz" | md5sum -c \
 	&& mkdir -p /usr/src/haproxy \
 	&& tar -xzf haproxy.tar.gz -C /usr/src/haproxy --strip-components=1 \
